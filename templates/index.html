@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+    <head>
+        
+    </head>
+    <body>
+
+        <form id=upload method="post" action="{{url_for('index')}}" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            {{ form.photo.label }}{{ form.photo() }}
+            {% if form.photo.errors %}
+                <ul class="errors">
+                    {% for error in form.photo.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <input type="submit" value="Upload">
+        </form>
+    </body>
+</html>
