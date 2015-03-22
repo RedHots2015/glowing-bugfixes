@@ -6,7 +6,7 @@ from flask_wtf import Form
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from flask.ext.sqlalchemy import SQLAlchemy
 
-app = Flask('Glow Bugfixes')
+app = Flask('Glow Bugfixes', static_folder='static/dist', static_url_path='/static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
 app.config['SECRET_KEY'] = 'Super Secret'
 db = SQLAlchemy(app)
