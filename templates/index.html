@@ -12,6 +12,16 @@
             </ul>
         {% endif %}
         </div><!-- /.form-group -->
+        <div class="form-group {% if form.photo.errors %} has-error {% endif %}">
+        {{ form.age.label }}{{ form.age(class='form-control') }}
+        {% if form.age.errors %}
+            <ul class="errors">
+                {% for error in form.age.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        </div><!-- /.form-group -->
         <div class="progress" style="display:none;">
             <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
                 <span class="sr-only">0% Complete</span>
@@ -21,7 +31,7 @@
     </form>
     <div id="image" style="display:none;">
         <canvas id="canvas-photo" style="width: 100%"></canvas>
-        <canvas id="canvas-draw" style="width: 100%"></canvas>
+        <canvas id="canvas-draw" style="top:0px; width: 100%"></canvas>
         <button id="mask" class="btn btn-default">Next</button>
     </div>
     <div id="wait">
@@ -30,6 +40,11 @@
                 <span class="sr-only">0% Complete</span>
             </div>
         </div>
+    </div>
+    <div id="results" style="display:none;">
+        <h1>We're learning!</h1>
+        <p class="lead">We don't have enough data to make the most accurate predictions just yet. We'll notify you when we are.</p>
+        <button class="btn btn-primary">Subscribe</button>
     </div>
 {% endblock %}
 {% block script %}
@@ -63,10 +78,10 @@
                 bar.attr('aria-valuenow', value);
                 bar.children('.sr-only').html(value + '% Complete')
                 if(value == 100) {
-                    $('#wait').hide();
+                    $('#wait .progress').hide();
                     $('#results').show(); 
                 } else {
-                    window.setTimeout(again, 500);
+                    window.setTimeout(again, 1000);
                 }
             }, errorHandler);
         };
@@ -92,6 +107,7 @@
             photo_context.drawImage(image, 0, 0, photo.width, height);
         };
         image.src = url;
+
 
         $(draw).on('mousedown', function(e) {
             cx = e.pageX - $(this).offset().left;
@@ -122,6 +138,7 @@
             });
         });
         
+        
         $('#mask').on('click', function() {
             
             
@@ -139,7 +156,7 @@
                 contentType: 'application/json',
             }).then(function() {
                 $('#image').hide();
-                $('#wait').show()
+                $('#wait .progress').show()
                 wait(id);
             }, errorHandler);
      
