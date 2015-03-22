@@ -78,13 +78,7 @@ def index():
         try:
             db.session.commit()
         except IntegrityError:
-            form.errors['photo'] = ['Image already exists']
-            
-            if request_wants_json():
-                return jsonify({'errors': form.errors})
-
-            return render_template('index.html', form=form)
-
+            pass
 
         if request_wants_json():
             return jsonify({
@@ -100,7 +94,7 @@ def index():
 
     return render_template('index.html', form=form)
 
-@app.route('/refine/<string:id>')
+@app.route('/refine/<string:id>', methods=['POST'])
 def refine(id):
     mole = Mole.query.filter(Mole.id == id).first_or_404()
     mole.mask_cx = request.json['cx']
@@ -111,7 +105,7 @@ def refine(id):
     db.session.merge(mole)
     db.session.commit()
 
-    os.spawnlp(os.P_WAIT, 'algorithm.py', 'algorithm.py', id)
+    os.spawnlp(os.P_NOWAIT, 'algorithm.py', 'algorithm.py', id)
 
     return jsonify({'OK': 'True'}) 
 

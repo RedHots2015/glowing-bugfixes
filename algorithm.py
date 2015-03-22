@@ -1,8 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
-from sqlalchemy import create_engine
 from app import Mole, db
 import sys
+
+
+print('hello')
 
 id = sys.argv[1]
 
@@ -10,6 +12,7 @@ id = sys.argv[1]
 
 # In[35]:
 
+import numpy as np
 from skimage import io
 
 # In[36]:
@@ -102,9 +105,10 @@ db.session.commit()
 # In[56]:
 
 y,x = np.ogrid[:gray.shape[0],:gray.shape[1]]
-cx = mole.mask_cx
-cy = mole.mask_cy
-radius = mole.mask_r
+cx = mole.mask_cx / 10
+cy = mole.mask_cy / 10
+radius = mole.mask_r / 10
+
 r2 = (x-cx)*(x-cx) + (y-cy)*(y-cy)
 
 mask = r2 <= radius * radius
