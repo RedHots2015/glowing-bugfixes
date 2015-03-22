@@ -1,7 +1,7 @@
 from os import path
 from hashlib import sha1
 
-from flask import Flask, request, url_for, render_template, redirect, send_from_directory
+from flask import Flask, request, url_for, render_template, redirect, send_from_directory, jsonify
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -28,6 +28,14 @@ class Mole(db.Model):
     symmetry = db.Column(db.Float)
     continuity = db.Column(db.Float)
     age = db.Column(db.Integer)
+
+def request_wants_json():
+        best = request.accept_mimetypes \
+                .best_match(['application/json', 'text/html'])
+        return best == 'application/json' and \
+            request.accept_mimetypes[best] > \
+            request.accept_mimetypes['text/html']
+
 
 def chunks(data):
     def fun():
@@ -60,7 +68,16 @@ def index():
         db.session.add(mole)
         db.session.commit()
 
+        print(request.accept_mimetypes)
+
+        if request_wants_json():
+            return jsonify({'url': url_for('uploads', filename=filename)})
+
         return redirect(url_for('refine', id=mole.id))
+
+
+        if request_wants_json():
+            return jsonify({'errors': form.errors})
 
     return render_template('index.html', form=form)
 
@@ -73,6 +90,7 @@ def refine(id):
 def uploads(filename):
     print(filename)
     return send_from_directory('uploads', filename)
+
 
 if __name__ == '__main__':
     app.debug = True
