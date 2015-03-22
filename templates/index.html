@@ -19,6 +19,11 @@
         </div>
         <input type="submit" class="btn btn-default" value="Upload">
     </form>
+    <div id="image">
+        <canvas id="canvas-photo" style="width: 100%"></canvas>
+        <canvas id="canvas-draw" style="width: 100%"></canvas>
+        <button id="mask" class="btn btn-default">Next</button>
+    <div>
 {% endblock %}
 {% block script %}
 <script>
@@ -31,9 +36,88 @@
             bar.children('.sr-only').html(value + '% Complete')
         }
     }
+
+    var cx;
+    var cy;
+    var radius;
+    
+
+    var createCanvas = function(id, url, width) {
+        var photo = document.getElementById('canvas-photo');
+        photo.width = width;
+        var photo_context = photo.getContext('2d');
+        var draw = document.getElementById('canvas-draw');
+        var draw_context = draw.getContext('2d');
+        var image = new Image();
+        var ratio;
+
+        image.onload = function() {
+            ratio = photo.width / image.width;
+            var height = image.height * ratio;
+            photo.height = height;
+            draw.height = height;
+            draw.width = width;
+            photo_context.drawImage(image, 0, 0, photo.width, height);
+        };
+        image.src = url;
+
+        $(draw).on('mousedown', function(e) {
+            cx = e.pageX - $(this).offset().left;
+            cy = e.pageY - $(this).offset().top;
+
+
+            var move = function(e) {
+                draw_context.clearRect ( 0 , 0 , draw.width, draw.height );
+                
+                draw_context.beginPath();
+
+                var x = e.pageX - $(this).offset().left;
+                var y = e.pageY - $(this).offset().top;
+
+                radius = Math.sqrt(Math.pow(x - cx, 2) + Math.pow(y - cy, 2));
+                console.log(x, cx, y, cy);
+                draw_context.arc(cx, cy, radius, 0, 2 * Math.PI, false);
+                draw_context.lineWidth = 5;
+                draw_context.strokeStyle = '#003300';
+                draw_context.stroke();
+                draw_context.closePath();
+            };
+
+            $(draw).on('mousemove', move);
+
+            $(draw).on('mouseup', function() {
+                $(draw).off('mousemove', move);
+            });
+        });
+        
+        $('#mask').on('click', function() {
+            
+            
+
+
+            $.ajax({
+                url: '/refine/' + id,  //Server script to process data
+                type: 'POST',
+                data: {
+                    cx: cx / ratio, 
+                    cy: cy / ratio, 
+                    radius: radius / ratio
+                }
+            }).then(function() {
+                $('#image').hide();
+                $('#wait').show()
+                wait();
+            }, errorHandler);
+     
+        })
+
+
+    }
     
     var successHandler = function(data) {
-        console.log(data);
+        $('#upload').hide();
+        $('#image').show();
+        createCanvas(data['id'], data['url'], $('#image').width())
     };
     
     var errorHandler = function(e) {

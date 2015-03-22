@@ -1,10 +1,13 @@
 from os import path
+import os
 from hashlib import sha1
 
 from flask import Flask, request, url_for, render_template, redirect, send_from_directory, jsonify
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from flask.ext.sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
+
 
 app = Flask('Glow Bugfixes', static_folder='static/dist', static_url_path='/static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
@@ -26,8 +29,14 @@ class Mole(db.Model):
     filename = db.Column(db.String(80), unique=True)
     diameter = db.Column(db.Float)
     symmetry = db.Column(db.Float)
-    continuity = db.Column(db.Float)
+    h = db.Column(db.Float)
+    s = db.Column(db.Float)
+    v = db.Column(db.Float)
     age = db.Column(db.Integer)
+    mask_cx = db.Column(db.Float)
+    mask_cy = db.Column(db.Float)
+    mask_r = db.Column(db.Float)
+    status = db.Column(db.Integer)
 
 def request_wants_json():
         best = request.accept_mimetypes \
@@ -66,12 +75,22 @@ def index():
         mole.filename = filename
 
         db.session.add(mole)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            form.errors['photo'] = ['Image already exists']
+            
+            if request_wants_json():
+                return jsonify({'errors': form.errors})
 
-        print(request.accept_mimetypes)
+            return render_template('index.html', form=form)
+
 
         if request_wants_json():
-            return jsonify({'url': url_for('uploads', filename=filename)})
+            return jsonify({
+                'id': mole.id,
+                'url': url_for('uploads', filename=filename)
+            })
 
         return redirect(url_for('refine', id=mole.id))
 
@@ -84,7 +103,22 @@ def index():
 @app.route('/refine/<string:id>')
 def refine(id):
     mole = Mole.query.filter(Mole.id == id).first_or_404()
-    return render_template('refine.html', url=url_for('uploads', filename=mole.filename))
+    mole.mask_cx = request.json['cx']
+    mole.mask_cy = request.json['cy']
+    mole.mask_r = request.json['radius']
+   
+    
+    db.session.merge(mole)
+    db.session.commit()
+
+    os.spawnlp(os.P_WAIT, 'algorithm.py', 'algorithm.py', id)
+
+    return jsonify({'OK': 'True'}) 
+
+@app.route('/updates/<string:id>')
+def update(id):
+    mole = Mole.query.filter(Mole.id == id).first_or_404()
+    return jsonify({'status': mole.status})
 
 @app.route('/uploads/<string:filename>')
 def uploads(filename):

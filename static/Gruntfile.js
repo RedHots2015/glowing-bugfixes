@@ -293,6 +293,14 @@ module.exports = function (grunt) {
           '**/*'
         ],
         dest: 'docs/dist/'
+      },
+      jquery: {
+        expand: true,
+        cwd: 'bower_components/jquery/dist/',
+        src: [
+            '*'
+        ],
+        dest: 'dist/js/'
       }
     },
 
@@ -451,7 +459,7 @@ module.exports = function (grunt) {
   grunt.registerTask('test-js', ['jshint:core', 'jshint:test', 'jshint:grunt', 'jscs:core', 'jscs:test', 'jscs:grunt', 'qunit']);
 
   // JS distribution task.
-  grunt.registerTask('dist-js', ['concat', 'uglify:core', 'commonjs']);
+  grunt.registerTask('dist-js', ['concat', 'uglify:core', 'copy:jquery', 'commonjs']);
 
   // CSS distribution task.
   grunt.registerTask('less-compile', ['less:compileCore', 'less:compileTheme']);
